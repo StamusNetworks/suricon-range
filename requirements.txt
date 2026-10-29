@@ -1,0 +1,7 @@
+ansible
+jupyter
+jupyterlab
+pandas
+python-dotenv
+tuoni==0.17.0
+pydot

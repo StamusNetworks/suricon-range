@@ -1,0 +1,12 @@
+.venv
+.pyenv
+.ipynb_checkpoints
+
+build/
+
+.env
+
+*.pkl
+*.egg-info
+.flake8
+__pycache__/
