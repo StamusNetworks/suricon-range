@@ -4,4 +4,5 @@ jupyterlab
 pandas
 python-dotenv
 tuoni==0.17.0
+openai
 pydot

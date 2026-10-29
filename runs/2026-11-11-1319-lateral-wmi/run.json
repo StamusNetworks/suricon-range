@@ -1,0 +1,19 @@
+{
+  "run_id": "2026-11-11-1319-lateral-wmi",
+  "op_slug": "lateral-wmi",
+  "techniques": [
+    "T1021.002",
+    "T1047"
+  ],
+  "targets": [
+    "suricon-ws1.lab.local",
+    "suricon-dc.lab.local"
+  ],
+  "eve_filter": [
+    "src_ip: 10.137.2.33 AND dest_ip: 10.137.2.62",
+    "src_ip: 10.137.2.62 AND dest_ip: 10.137.2.7"
+  ],
+  "start_time": "2026-11-11T13:19:25+00:00",
+  "status": "completed",
+  "end_time": "2026-11-11T13:21:04+00:00"
+}
