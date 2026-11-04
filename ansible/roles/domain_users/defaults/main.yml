@@ -1,0 +1,39 @@
+---
+domain_groups: []
+domain_users: []
+
+# Example:
+# domain_groups:
+#   - name: LabUsers
+#     description: Standard cyber range users
+#   - name: LabAdmins
+#     description: Privileged lab admin accounts
+#     member_of: [Domain Admins]
+#
+# domain_users:
+#   - name: john.smith
+#     firstname: John
+#     surname: Smith
+#     password: "Labuser1!"
+#     groups: [LabUsers]
+#   - name: jane.doe
+#     firstname: Jane
+#     surname: Doe
+#     password: "Labuser1!"
+#     groups: [LabUsers]
+#   - name: bob.jones
+#     firstname: Bob
+#     surname: Jones
+#     password: "Labuser1!"
+#     groups: [LabUsers]
+#   - name: alice.wong
+#     firstname: Alice
+#     surname: Wong
+#     password: "Labuser1!"
+#     groups: [LabUsers]
+#   - name: lab.admin
+#     firstname: Lab
+#     surname: Admin
+#     password: "Labadmin1!"
+#     password_never_expires: true
+#     groups: [LabAdmins]

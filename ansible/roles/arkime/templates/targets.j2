@@ -1,0 +1,6 @@
+#field:target.name;shortcut:0
+#field:target.team;shortcut:1
+#field:target.description;shortcut:2
+{% for a in assets %}
+{{ a.addr }};0={{ a.fqdn | lower | replace(" ", "_") }};1={{ a.team | default('NA') }};2={{ a.desc | default('NA') | flatten_multiline | lower }}
+{% endfor %}

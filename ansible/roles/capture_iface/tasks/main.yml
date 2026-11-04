@@ -1,0 +1,9 @@
+---
+- name: Bring up second interface for packet capture
+  become: true
+  ansible.builtin.template:
+    src: networkd.j2
+    dest: "/etc/systemd/network/10-{{ capture_interface | mandatory }}.network"
+  notify: 
+    - restart systemd-networkd
+

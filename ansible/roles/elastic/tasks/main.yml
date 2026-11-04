@@ -1,0 +1,3 @@
+---
+- name: Set up Elastic
+  include_tasks: elastic.yml

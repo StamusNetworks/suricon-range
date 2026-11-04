@@ -1,0 +1,20 @@
+---
+capture_interface: ens19
+suricata_capture_interface: "{{ capture_interface }}"
+arkime_capture_interface: "{{ capture_interface }}"
+
+suricata_sensor_logs: /srv/logs/suricata
+
+suricata_tag: "8.0.8"
+suricata_update_suricata_version: "{{ suricata_tag }}"
+
+suricata_stream_midstream: true
+suricata_smb_stream_depth: 0
+suricata_smb_max_tx: 65536
+
+arkime_af_packet: true
+arkime_read_truncated_packets: true
+arkime_default_pass: "Arkime1!"
+arkime_password_secret: "suricon2026-arkime-s2s"
+
+eve_shipper_opensearch_host: "{{ hostvars[groups['logserver'][0]]['ansible_host'] }}"

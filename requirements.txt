@@ -1,4 +1,6 @@
-ansible
+ansible==13.2.0
+ansible-core==2.20.1
+pywinrm
 jupyter
 jupyterlab
 pandas

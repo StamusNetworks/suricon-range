@@ -1,0 +1,21 @@
+---
+- name: Ship asset listing
+  ansible.builtin.template:
+    src: targets.j2
+    dest: "{{ arkime_config_dir }}/assets.txt"
+  when: assets is defined
+
+- name: Generate WISE config
+  ansible.builtin.template:
+    src: wise.ini.j2
+    dest: "{{ arkime_config_dir }}/wise.ini"
+  notify:
+  - restart arkime wise
+
+- name: Ship customized WISE service
+  ansible.builtin.template:
+    src: systemd-wise.j2
+    dest: /etc/systemd/system/arkimewise.service
+  notify:
+  - reload systemd
+  - restart arkime wise

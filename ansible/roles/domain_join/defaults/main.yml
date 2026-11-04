@@ -1,0 +1,5 @@
+---
+domain_name: lab.local
+
+domain_dc_dns_servers:
+  - 192.168.56.10

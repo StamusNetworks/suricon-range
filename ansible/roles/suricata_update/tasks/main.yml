@@ -1,0 +1,51 @@
+---
+- name: Ensure suricata-update working dirs exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ suricata_update_home }}"
+    - "{{ suricata_update_home }}/data"
+    - "{{ suricata_update_output_dir }}"
+
+- name: Install suricata-update into the host venv
+  ansible.builtin.pip:
+    name: "{{ suricata_update_pkg }}"
+    virtualenv: "{{ suricata_update_venv }}"
+    virtualenv_command: "python3 -m venv"
+
+- name: Write update.yaml (serialized from suricata_update_config)
+  ansible.builtin.copy:
+    content: "{{ suricata_update_config | to_nice_yaml }}"
+    dest: "{{ suricata_update_home }}/update.yaml"
+    mode: "0644"
+
+- name: Render suricata-update filter configs
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ suricata_update_home }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - disable.conf
+    - modify.conf
+    - enable.conf
+
+- name: Run suricata-update (fetch + merge sources)
+  ansible.builtin.command:
+    argv:
+      - "{{ suricata_update_venv }}/bin/suricata-update"
+      - "--config"
+      - "{{ suricata_update_home }}/update.yaml"
+      - "--no-reload"
+      - "--suricata-version"
+      - "{{ suricata_update_suricata_version }}"
+      - "--data-dir"
+      - "{{ suricata_update_home }}/data"
+      - "--fail"
+  register: _su_run
+  changed_when: "'No changes detected, exiting.' not in (_su_run.stdout ~ _su_run.stderr)"
+
+- name: Signal ruleset change to the suricata role
+  ansible.builtin.set_fact:
+    suricata_update_ruleset_changed: "{{ _su_run is changed }}"

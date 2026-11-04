@@ -1,0 +1,26 @@
+---
+arkime_version: 6.9.1
+arkime_latest: false
+arkime_config_dir: /opt/arkime/etc
+arkime_pcap_dir: /opt/arkime/raw
+arkime_port: 8005
+arkime_packet_threads: 2
+
+arkime_install: true
+arkime_redis: true
+
+arkime_elastic: http://127.0.0.1:9200
+arkime_wise: 127.0.0.1
+arkime_default_pass: moloch
+
+arkime_users:
+  - name: admin
+    admin: true
+
+arkime_password_secret: SuperDuperS3cr3t!CHANGEMEPLEASE
+arkime_read_truncated_packets: false
+arkime_af_packet: false
+arkime_af_packet_blocksize: 2097152
+arkime_snaplen: 16384
+
+arkime_capture_interface: lo

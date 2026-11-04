@@ -1,0 +1,28 @@
+---
+opensearch_java_heap_gb: 4
+
+opensearch_index_templates:
+  - name: suricata
+    index_patterns: ["suricata-*"]
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+        timestamp:
+          type: date
+        flow_id:
+          type: long
+        community_id:
+          type: keyword
+        src_ip:
+          type: ip
+        dest_ip:
+          type: ip
+        alert:
+          properties:
+            metadata:
+              type: flat_object
+
+opensearch_index_patterns:
+  - title: suricata-*
+    time_field: timestamp

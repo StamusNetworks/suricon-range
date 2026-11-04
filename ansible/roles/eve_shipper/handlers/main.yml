@@ -1,0 +1,6 @@
+---
+- name: restart eve shipper
+  community.docker.docker_container:
+    name: "fluent-bit"
+    state: started
+    restart: true

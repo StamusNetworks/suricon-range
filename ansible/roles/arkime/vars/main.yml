@@ -1,0 +1,23 @@
+---
+arkime_rules:
+  version: 1
+  rules:
+    - name: "Drop tls"
+      when: "fieldSet"
+      fields:
+        protocols:
+        - tls
+      ops:
+        _maxPacketsToSave: 20
+    - name: "Drop ssh"
+      when: "fieldSet"
+      fields:
+        protocols:
+        - ssh
+      ops:
+        _maxPacketsToSave: 30
+
+arkime_folder: "{{ 'last-commit6' if arkime_latest else 'v' ~ arkime_version }}"
+
+arkime_link_install: "https://github.com/arkime/arkime/releases/download/{{ arkime_folder }}/arkime_{{ arkime_version ~ '-1' if not arkime_latest else 'main' }}.debian13_amd64.deb"
+arkime_link_ja4: "https://github.com/arkime/arkime/releases/download/{{ arkime_folder }}/ja4plus.amd64.so"

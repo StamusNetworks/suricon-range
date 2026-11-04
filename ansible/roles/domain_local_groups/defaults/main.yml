@@ -1,0 +1,7 @@
+---
+# Example:
+# domain_local_groups:
+#   - name: Remote Desktop Users
+#     members: [LabUsers]
+domain_local_groups: []
+domain_netbios: "{{ domain_name.split('.')[0] | upper }}"

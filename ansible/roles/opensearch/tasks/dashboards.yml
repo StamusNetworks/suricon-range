@@ -1,0 +1,24 @@
+---
+- name: Deploy docker container for OpenSearch Dashboards
+  community.docker.docker_container:
+    name: "{{ opensearch_dashboards_container_name }}"
+    hostname: "{{ opensearch_dashboards_container_name }}"
+    image: "opensearchproject/opensearch-dashboards:{{ opensearch_version }}"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ opensearch_docker_network_name }}"
+    published_ports:
+      - "{{ opensearch_dashboards_expose_host }}:{{ opensearch_dashboards_expose_port }}:5601"
+    env:
+      OPENSEARCH_HOSTS: '["http://{{ opensearch_container_name }}:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+
+- name: Wait for OpenSearch Dashboards to be available
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_dashboards_expose_port }}/api/status"
+    status_code: 200
+  register: _osd_status
+  retries: 30
+  delay: 5
+  until: _osd_status.status == 200

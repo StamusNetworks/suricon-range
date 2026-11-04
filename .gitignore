@@ -10,3 +10,5 @@ build/
 *.egg-info
 .flake8
 __pycache__/
+
+ansible/collections/

@@ -1,0 +1,26 @@
+---
+- name: Ensure shipper config dir
+  ansible.builtin.file:
+    path: "/opt/fluent-bit"
+    state: directory
+    mode: '0755'
+
+- name: Deploy fluent-bit config
+  ansible.builtin.template:
+    src: fluent-bit.yaml.j2
+    dest: "/opt/fluent-bit/fluent-bit.yaml"
+    mode: '0644'
+  notify:
+  - restart eve shipper
+
+- name: Deploy fluent-bit container
+  community.docker.docker_container:
+    name: "fluent-bit"
+    image: "{{ eve_shipper_image }}"
+    state: started
+    restart_policy: unless-stopped
+    volumes:
+    - "{{ suricata_sensor_logs }}:/var/log/suricata:ro"
+    - "/opt/fluent-bit/fluent-bit.yaml:/fluent-bit/etc/fluent-bit.yaml:ro"
+    - "fluent-bit-db:/fluent-bit/db:rw"
+    command: -c /fluent-bit/etc/fluent-bit.yaml

@@ -1,0 +1,42 @@
+# WISE Service Config - https://molo.ch/wise
+[wiseService]
+port = 8081
+
+# Global domains to never lookup
+excludeDomains=*.bl.barracudabrts.com;*.zen.spamhaus.org;*.in-addr.arpa;*.avts.mcafee.com;*.avqs.mcafee.com;*.bl.barracuda.com;*.lbl8.mailshell.net;*.dnsbl.sorbs.net;*.s.sophosxl.net;*.metric.gstatic.com;*.ip6.arpa
+
+{% if suricata_home_nets is defined %}
+[reversedns]
+ips={{ suricata_home_nets | join(';') }}
+field=asset
+{% endif %}
+
+{% if assets is defined %}
+[file:assets]
+file={{ arkime_config_dir }}/assets.txt
+tags=ipwise
+type=ip
+format=tagger
+{% endif %}
+
+[file:iocdomain]
+file={{ arkime_config_dir }}/ioc_domain.txt
+tags=ipwise
+type=domain
+format=tagger
+
+[file:iocip]
+file={{ arkime_config_dir }}/ioc_ip.txt
+tags=ipwise
+type=ip
+format=tagger
+
+############## Right Clicks ##############
+# Can either be [right-click] followed by items
+[right-click]
+VTIP=url:https://www.virustotal.com/en/ip-address/%TEXT%/information/;name:Virus Total IP;category:ip
+VTHOST=url:https://www.virustotal.com/en/domain/%HOST%/information/;name:Virus Total Host;category:host
+VTURL=url:https://www.virustotal.com/latest-scan/%URL%;name:Virus Total URL;category:url
+# or right-click:NAME with just a file setting, the file contains the right clicks and will auto reload on changes
+# [right-click:NAME]
+#file=/data/moloch/etc/rightclick-filename.ini

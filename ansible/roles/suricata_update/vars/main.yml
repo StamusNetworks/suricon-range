@@ -1,0 +1,10 @@
+---
+suricata_update_config:
+  sources: "{{ suricata_update_sources | map(attribute='url') | list }}"
+  ignore:
+    - "*deleted.rules"
+  disable-conf: "{{ suricata_update_home }}/disable.conf"
+  enable-conf: "{{ suricata_update_home }}/enable.conf"
+  modify-conf: "{{ suricata_update_home }}/modify.conf"
+  output: "{{ suricata_update_output_dir }}"
+  no-test: true

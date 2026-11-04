@@ -1,0 +1,7 @@
+---
+- ansible.builtin.include_tasks: "install.yml"
+  when: arkime_install is true
+
+- ansible.builtin.include_tasks: "wise.yml"
+
+- ansible.builtin.include_tasks: "config.yml"

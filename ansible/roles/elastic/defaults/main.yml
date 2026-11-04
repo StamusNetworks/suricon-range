@@ -1,0 +1,9 @@
+---
+elk_stack_version: 8.18.0
+elk_docker_network_name: elastic
+elk_cluster_name: elastic
+
+elk_elastic_expose_host: 127.0.0.1
+elk_elastic_expose_port: 9200
+elk_elastic_java_heap_gb: 2
+elk_elastic_container_name: elastic

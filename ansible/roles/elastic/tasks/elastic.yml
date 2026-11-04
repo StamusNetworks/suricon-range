@@ -1,0 +1,40 @@
+---
+- name: Increase max number of open file handles
+  sysctl:
+    name: vm.max_map_count
+    value: 262144
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Ensure docker network
+  community.docker.docker_network:
+    name: "{{ elk_docker_network_name }}"
+
+- set_fact:
+    elastic_env_vars:
+      cluster.name: "{{ elk_cluster_name }}"
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: "-Xms{{ elk_elastic_java_heap_gb }}g -Xmx{{ elk_elastic_java_heap_gb }}g"
+
+- set_fact:
+    elastic_env_vars: "{{ elastic_env_vars | combine({'xpack.security.enrollment.enabled': 'false'}) }}"
+  when: (elk_stack_version.split('.')[0] | int) >= 8
+
+- name: Deploy docker container for elastic node
+  community.docker.docker_container:
+    name: "{{ elk_elastic_container_name }}"
+    hostname: "{{ elk_elastic_container_name }}"
+    image: "elastic/elasticsearch:{{ elk_stack_version }}"
+    volumes:
+      - "{{ elk_elastic_container_name }}-data:/usr/share/elasticsearch/data:rw"
+    state: started
+    restart_policy: unless-stopped
+    networks: 
+      - name: "{{ elk_docker_network_name }}"
+    ulimits:
+      - nofile:262144:262144
+    published_ports:
+      - "{{ elk_elastic_expose_host }}:{{ elk_elastic_expose_port }}:9200"
+    env: "{{ elastic_env_vars }}"

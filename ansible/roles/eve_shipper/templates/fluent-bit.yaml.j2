@@ -1,0 +1,33 @@
+service:
+  flush: 1
+  log_level: info
+
+parsers:
+  - name: eve
+    format: json
+    time_key: timestamp
+    time_format: "%Y-%m-%dT%H:%M:%S.%L%z"
+    time_keep: on
+
+pipeline:
+  inputs:
+    - name: tail
+      tag: eve
+      path: /var/log/suricata/eve.json
+      parser: eve
+      db: /fluent-bit/db/eve.db
+      buffer_chunk_size: 512k
+      buffer_max_size: 16M
+      skip_long_lines: on
+
+  outputs:
+    - name: opensearch
+      match: eve
+      host: {{ eve_shipper_opensearch_host }}
+      port: 9200
+      logstash_format: on
+      logstash_prefix: suricata
+      logstash_dateformat: "%Y.%m.%d"
+      time_key: "@timestamp"
+      suppress_type_name: on
+      trace_error: on

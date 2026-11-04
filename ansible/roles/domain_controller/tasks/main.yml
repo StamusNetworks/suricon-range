@@ -1,0 +1,68 @@
+---
+- name: Install Active Directory Domain Services role
+  ansible.windows.win_feature:
+    name: AD-Domain-Services
+    include_management_tools: yes
+    state: present
+
+- name: Ensure local Administrator password is set - promote will fail otherwise
+  ansible.windows.win_user:
+    name: Administrator
+    password: "{{ ansible_password }}"
+    update_password: always
+
+- name: Create new Windows domain in a new forest
+  microsoft.ad.domain:
+    install_dns: true
+    dns_domain_name: "{{ domain_name }}"
+    safe_mode_password: "{{ ansible_password }}"
+  register: dc_result
+
+- name: Reboot after DC bootstrap and restore ansible user
+  delegate_to: "{{ inventory_hostname }}"
+  vars:
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+  when: dc_result.reboot_required
+
+  block:
+
+    - name: Reboot after DC promotion
+      ansible.windows.win_reboot:
+
+    - name: Wait for critical services to be running
+      ansible.windows.win_service_info:
+        name: "{{ item }}"
+      register: domain_service
+      until: domain_service.services[0].state == 'started'
+      retries: 60
+      delay: 30
+      loop:
+        - NTDS
+        - Netlogon
+        - ADWS
+
+    - name: Wait for ADWS to respond to queries
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        Get-ADDomain | Out-Null
+      register: addomain
+      until: addomain.rc == 0
+      retries: 60
+      delay: 15
+
+    - name: Make ansible user domain admin to re-enable SSH interaction
+      microsoft.ad.user:
+        name: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        enabled: yes
+        state: present
+        groups:
+          add:
+            - "Domain Admins"
+
+- name: Configure DNS forwarder to lab recursor
+  ansible.windows.win_shell: |
+    Set-DnsServerForwarder -IPAddress "{{ _dns_ip }}" -PassThru
+  when: groups['dns'] | default([]) | length > 0

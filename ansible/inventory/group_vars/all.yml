@@ -1,0 +1,8 @@
+---
+ansible_user: vagrant
+ansible_password: "Suricon!M33rk4tz!2026"
+
+fqdn: "{{ ansible_host }}"
+
+suricata_home_nets:
+  - 10.137.2.32/27

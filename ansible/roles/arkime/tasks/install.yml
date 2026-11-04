@@ -1,0 +1,43 @@
+---
+- name: Install a .deb package from the internet
+  ansible.builtin.apt:
+    deb: "{{ arkime_link_install }}"
+
+- name: Set up JA4+ plugin
+  ansible.builtin.get_url:
+    url: "{{ arkime_link_ja4 }}"
+    dest: /opt/arkime/plugins/ja4plus.amd64.so
+
+- name: Register database state
+  ansible.builtin.shell: "/opt/arkime/db/db.pl {{ arkime_elastic }} info | grep 'DB Version' | cut -d ':' -f2 | tr -d ' '"
+  register: arkime_db_info  
+  until: arkime_db_info.stderr.find("http status code is 500") == -1
+  retries: 15
+  delay: 3
+
+- name: Init Arkime database if needed
+  ansible.builtin.shell: "echo INIT | /opt/arkime/db/db.pl {{ arkime_elastic }} init"
+  when: arkime_db_info.stdout.find('-1') != -1
+
+- name: Ensure that arkime folders exists
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.user | default('nobody') }}"
+    group: "{{ item.group | default('daemon') }}"
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    - path: /opt/arkime/logs
+    - path: "{{ arkime_pcap_dir }}"
+    - path: "{{ arkime_config_dir }}"
+      user: root
+      group: root
+
+- name: Check if geo files need to be initialized
+  ansible.builtin.stat:
+    path: /opt/arkime/etc/ipv4-address-space.csv
+  register: stat_geo
+
+- name: Init arkime geo
+  ansible.builtin.shell: /opt/arkime/bin/arkime_update_geo.sh
+  when: not stat_geo.stat.exists

@@ -1,0 +1,28 @@
+---
+- name: Create/update index patterns
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_dashboards_expose_port }}/api/saved_objects/index-pattern/{{ item.title | regex_replace('[^A-Za-z0-9]+', '-') | regex_replace('^-|-$', '') }}?overwrite=true"
+    method: POST
+    headers:
+      osd-xsrf: "true"
+    body_format: json
+    body:
+      attributes:
+        title: "{{ item.title }}"
+        timeFieldName: "{{ item.time_field }}"
+    status_code: 200
+  loop: "{{ opensearch_index_patterns }}"
+  loop_control:
+    label: "{{ item.title }}"
+
+- name: Set default index pattern
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_dashboards_expose_port }}/api/opensearch-dashboards/settings"
+    method: POST
+    headers:
+      osd-xsrf: "true"
+    body_format: json
+    body:
+      changes:
+        defaultIndex: "{{ opensearch_index_patterns[0].title | regex_replace('[^A-Za-z0-9]+', '-') | regex_replace('^-|-$', '') }}"
+    status_code: 200

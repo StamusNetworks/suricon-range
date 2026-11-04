@@ -1,0 +1,63 @@
+---
+- name: Generate arkime config
+  ansible.builtin.template:
+    src: config.ini.j2
+    dest: "{{ arkime_config_dir }}/config.ini"
+  notify:
+  - restart arkime capture
+  - restart arkime viewer
+
+- name: Serialize arkime rules
+  ansible.builtin.copy:
+    content: "{{ arkime_rules | to_yaml }}"
+    dest: "{{ arkime_config_dir }}/rules.conf"
+  when: arkime_rules is defined
+  notify:
+  - restart arkime capture
+
+- name: Ship customized service files
+  ansible.builtin.template:
+    src: "systemd-{{ item }}.j2"
+    dest: "/etc/systemd/system/arkime{{ item }}.service"
+  notify:
+  - reload systemd
+  - "restart arkime {{ item }}"
+  loop:
+    - capture
+    - viewer
+
+- name: Link configurations
+  ansible.builtin.file:
+    src: "{{ arkime_config_dir }}/{{ item }}"
+    dest: "/opt/arkime/etc/{{ item }}"
+    state: link
+  loop:
+    - config.ini
+    - wise.ini
+  notify:
+  - restart arkime capture
+  - restart arkime viewer
+  - restart arkime wise
+  when: arkime_config_dir != '/opt/arkime/etc'
+
+- name: Ensure arkime users
+  ansible.builtin.shell: >-
+    /opt/arkime/bin/arkime_add_user.sh -c {{ arkime_config_dir }}/config.ini
+    {{ item.id | default(item.name) }} {{ item.name | mandatory }}
+    {{ item.password | default(arkime_default_pass) }}
+    {% if item.admin | default(false) %}--admin{% endif %}
+    {% if item.roles is defined %}--roles {{ item.roles | join(',') }}{% endif %}
+    {% if item.webauth | default(false) %}--webauth{% endif %}
+    --createOnly
+  loop: "{{ arkime_users }}"
+
+- name: Ensure arkime services
+  ansible.builtin.systemd:
+    name: "arkime{{ item }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+  loop:
+    - wise
+    - capture
+    - viewer

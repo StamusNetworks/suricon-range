@@ -1,0 +1,68 @@
+---
+- name: Ensure old versions of Docker are not installed.
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-engine
+    state: absent
+
+- name: Ensure dependencies are installed.
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - gpg
+    state: present
+
+- name: Docker repo trust - debian <13
+  when:
+    - ansible_facts['distribution'] == "Debian"
+    - ansible_facts['distribution_major_version'] is version('13', '<')
+  block:
+    - name: Add Docker apt key.
+      ansible.builtin.apt_key:
+        url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+        id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+        state: present
+
+    - name: Add Docker repository.
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_facts['distribution_release'] }} stable"
+        state: present
+        update_cache: true
+
+- name: Docker repo trust - debian 13+
+  when:
+    - ansible_facts['distribution'] == "Debian"
+    - ansible_facts['distribution_major_version'] is version('13', '>=')
+  block:
+    - name: Add repository GPG key
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+        dest: /etc/apt/trusted.gpg.d/docker.gpg
+        mode: '0644'
+
+    - name: Add Docker repository.
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_facts['distribution_release'] }} stable"
+        state: present
+        update_cache: true
+
+- name: Install Docker Community Edition from PPA
+  ansible.builtin.package:
+    name: docker-ce
+    state: latest
+
+- name: Update docker config
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ content | to_json }}"
+  vars:
+    content:
+      data-root: "{{ docker_data_root }}"
+      storage-driver: "{{ docker_storage_driver }}"
+  notify:
+  - restart docker
+
+- name: Apply daemon.json before any container is created
+  ansible.builtin.meta: flush_handlers

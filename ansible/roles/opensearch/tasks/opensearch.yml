@@ -1,0 +1,45 @@
+---
+- name: Increase max number of memory map areas
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: "262144"
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: Ensure docker network
+  community.docker.docker_network:
+    name: "{{ opensearch_docker_network_name }}"
+
+- name: Deploy docker container for OpenSearch node
+  community.docker.docker_container:
+    name: "{{ opensearch_container_name }}"
+    hostname: "{{ opensearch_container_name }}"
+    image: "opensearchproject/opensearch:{{ opensearch_version }}"
+    volumes:
+      - "{{ opensearch_container_name }}-data:/usr/share/opensearch/data:rw"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ opensearch_docker_network_name }}"
+    ulimits:
+      - nofile:65536:65536
+      - memlock:-1:-1
+    published_ports:
+      - "{{ opensearch_expose_host }}:{{ opensearch_expose_port }}:9200"
+    env:
+      cluster.name: "{{ opensearch_cluster_name }}"
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms{{ opensearch_java_heap_gb }}g -Xmx{{ opensearch_java_heap_gb }}g"
+
+- name: Wait for OpenSearch to be reachable
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_expose_port }}/_cluster/health"
+    status_code: 200
+  register: _os_health
+  retries: 30
+  delay: 5
+  until: _os_health.status == 200

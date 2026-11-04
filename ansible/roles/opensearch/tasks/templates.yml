@@ -1,0 +1,32 @@
+---
+- name: Install/update index templates
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_expose_port }}/_index_template/{{ _tpl.name }}"
+    method: PUT
+    body_format: json
+    body:
+      index_patterns: "{{ _tpl.index_patterns }}"
+      priority: "{{ _tpl.priority }}"
+      template:
+        settings: "{{ _tpl.settings }}"
+        mappings: "{{ _tpl.mappings }}"
+    status_code: 200
+  vars:
+    _tpl: "{{ opensearch_index_template_base | combine(item, recursive=True) }}"
+  loop: "{{ opensearch_index_templates }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Patch matching live indices with merged settings
+  ansible.builtin.uri:
+    url: "http://localhost:{{ opensearch_expose_port }}/{{ _tpl.index_patterns | join(',') }}/_settings?allow_no_indices=true"
+    method: PUT
+    body_format: json
+    body: "{{ _tpl.settings }}"
+    status_code: [200, 404]
+  vars:
+    _tpl: "{{ opensearch_index_template_base | combine(item, recursive=True) }}"
+  loop: "{{ opensearch_index_templates }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: _tpl.apply_to_existing | bool

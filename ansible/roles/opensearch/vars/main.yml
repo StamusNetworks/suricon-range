@@ -1,0 +1,7 @@
+---
+opensearch_index_template_base:
+  priority: 100
+  apply_to_existing: true
+  settings:
+    index.mapping.total_fields.limit: 2000
+  mappings: {}

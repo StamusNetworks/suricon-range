@@ -1,0 +1,10 @@
+---
+ansible_connection: ssh
+ansible_shell_type: powershell
+
+domain_name: lab.local
+domain_dc_dns_servers: "{{ groups['domain_controller'] | map('extract', hostvars, 'ansible_host') | list }}"
+
+domain_local_groups:
+  - name: Remote Desktop Users
+    members: [LabUsers]

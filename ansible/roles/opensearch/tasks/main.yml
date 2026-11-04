@@ -1,0 +1,17 @@
+---
+- name: Set up OpenSearch
+  ansible.builtin.include_tasks: opensearch.yml
+
+- name: Manage index templates
+  ansible.builtin.include_tasks: templates.yml
+  when: opensearch_index_templates | length > 0
+
+- name: Set up OpenSearch Dashboards
+  when: opensearch_dashboards_enabled is true
+  block:
+    - name: Deploy Dashboards
+      ansible.builtin.include_tasks: dashboards.yml
+
+    - name: Manage index patterns
+      ansible.builtin.include_tasks: index_patterns.yml
+      when: opensearch_index_patterns | length > 0

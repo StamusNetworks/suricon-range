@@ -1,0 +1,9 @@
+---
+- name: Add domain groups to local groups
+  ansible.windows.win_group_membership:
+    name: "{{ item.name }}"
+    members: "{{ item.members | domain_principals(domain_netbios) }}"
+    state: present
+  loop: "{{ domain_local_groups }}"
+  loop_control:
+    label: "{{ item.name }}"

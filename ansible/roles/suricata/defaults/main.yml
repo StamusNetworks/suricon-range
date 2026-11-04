@@ -1,0 +1,23 @@
+---
+suricata_image: "jasonish/suricata"
+
+suricata_capture_interface: lo
+
+suricata_rule_files:
+  - "suricata.rules"
+
+suricata_stream_midstream: false
+suricata_smb_stream_depth: 1mb
+suricata_smb_max_tx: 16384
+
+suricata_home_nets:
+  - 10.0.0.0/8
+  - 192.168.0.0/24
+  - fe80::/48
+
+suricata_max_pending_packets: "65500"
+suricata_flow_hash_size: "1048576"
+suricata_flow_memcap: 1gb
+suricata_flow_prealloc: "1048576"
+suricata_stream_memcap: 3gb
+suricata_stream_reassembly_memcap: 5gb

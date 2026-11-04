@@ -1,0 +1,22 @@
+---
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: restart arkime wise
+  ansible.builtin.systemd:
+    name: arkimewise
+    state: restarted
+    enabled: true
+
+- name: restart arkime capture
+  ansible.builtin.systemd:
+    name: arkimecapture
+    state: restarted
+    enabled: true
+
+- name: restart arkime viewer
+  ansible.builtin.systemd:
+    name: arkimeviewer
+    state: restarted
+    enabled: true

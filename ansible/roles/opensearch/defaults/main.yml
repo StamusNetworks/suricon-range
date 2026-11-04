@@ -1,0 +1,34 @@
+---
+opensearch_version: 3.8.0
+opensearch_docker_network_name: opensearch
+opensearch_cluster_name: opensearch
+
+opensearch_container_name: opensearch
+opensearch_expose_host: 0.0.0.0
+opensearch_expose_port: 9200
+opensearch_java_heap_gb: 2
+
+opensearch_dashboards_enabled: true
+opensearch_dashboards_container_name: opensearch-dashboards
+opensearch_dashboards_expose_host: 0.0.0.0
+opensearch_dashboards_expose_port: 5601
+
+# Example:
+# opensearch_index_templates:
+#   - name: suricata
+#     index_patterns: ["suricata-*"]
+#     mappings:
+#       properties:
+#         alert:
+#           properties:
+#             metadata:
+#               type: flat_object
+opensearch_index_templates: []
+
+# Example:
+# opensearch_index_patterns:
+#   - title: suricata-*
+#     time_field: timestamp
+#   - title: windows-*
+#     time_field: event.created
+opensearch_index_patterns: []

@@ -1,0 +1,19 @@
+[Unit]
+Description=Arkime Capture
+After=network.target opensearch.service elasticsearch.service arkimewise.service
+
+[Service]
+Type=simple
+Restart=on-failure
+# StandardOutput=tty
+EnvironmentFile=-/opt/arkime/etc/capture.env
+ExecStartPre=/bin/bash -c 'for i in $(seq 1 30); do (>/dev/tcp/127.0.0.1/8081) 2>/dev/null && break || sleep 2; done'
+ExecStartPre=-/opt/arkime/bin/arkime_config_interfaces.sh -c /opt/arkime/etc/config.ini -n default
+# Modify /opt/arkime/etc/capture.env instead of ExecStart
+ExecStart=/bin/sh -c '/opt/arkime/bin/capture -c /opt/arkime/etc/config.ini ${OPTIONS} >> /opt/arkime/logs/capture.log 2>&1'
+WorkingDirectory=/opt/arkime
+LimitCORE=infinity
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target

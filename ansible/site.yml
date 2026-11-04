@@ -1,0 +1,58 @@
+---
+- name: Log server
+  hosts: logserver
+  tags: logserver
+  become: true
+  roles:
+    - role: docker
+    - role: opensearch
+
+- name: Capture probe
+  hosts: capture
+  tags: capture
+  become: true
+  roles:
+    - role: docker
+    - role: capture_iface
+    - role: elastic
+    - role: arkime
+    - role: suricata_update
+    - role: suricata
+    - role: eve_shipper
+
+- name: Promote domain controller
+  hosts: domain_controller
+  tags: domain
+  gather_facts: false
+  roles:
+    - role: domain_controller
+
+- name: Join Windows clients
+  hosts: domain_member
+  tags: domain
+  roles:
+    - role: domain_join
+
+- name: Create domain users and groups
+  hosts: domain_controller
+  tags: domain
+  gather_facts: false
+  roles:
+    - role: domain_users
+
+- name: Grant domain groups local group membership on domain members
+  hosts: domain_member
+  tags: domain
+  roles:
+    - role: domain_local_groups
+
+- name: Tuoni C2
+  hosts: tuoni
+  tags: tuoni
+  become: true
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: false
+  roles:
+    - role: docker
+    - role: nova.core.tuoni

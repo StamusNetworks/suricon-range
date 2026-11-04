@@ -1,0 +1,45 @@
+---
+- name: Create domain groups
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    description: "{{ item.description | default(omit) }}"
+    scope: "{{ item.scope | default('global') }}"
+    category: "{{ item.category | default('security') }}"
+    state: present
+  loop: "{{ domain_groups }}"
+
+- name: Nest groups into parent groups
+  ansible.windows.win_powershell:
+    script: |
+      param($Parent, $Child)
+      Import-Module ActiveDirectory
+      $current = Get-ADGroupMember -Identity $Parent -ErrorAction Stop |
+                 Select-Object -ExpandProperty SamAccountName
+      if ($current -notcontains $Child) {
+        Add-ADGroupMember -Identity $Parent -Members $Child
+        $Ansible.Changed = $true
+      } else {
+        $Ansible.Changed = $false
+      }
+    parameters:
+      Parent: "{{ item.1 }}"
+      Child: "{{ item.0.name }}"
+  loop: "{{ domain_groups | subelements('member_of', skip_missing=True) }}"
+
+- name: Create domain users
+  microsoft.ad.user:
+    name: "{{ item.name }}"
+    firstname: "{{ item.firstname | default(omit) }}"
+    surname: "{{ item.surname | default(omit) }}"
+    display_name: "{{ item.display_name | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    password: "{{ item.password }}"
+    upn: "{{ item.upn | default(item.name + '@' + domain_name) }}"
+    enabled: "{{ item.enabled | default(true) }}"
+    password_never_expires: "{{ item.password_never_expires | default(false) }}"
+    update_password: "{{ item.update_password | default('on_create') }}"
+    path: "{{ item.path | default(omit) }}"
+    state: present
+    groups:
+      add: "{{ item.groups | default([]) }}"
+  loop: "{{ domain_users }}"

@@ -1,0 +1,15 @@
+[Unit]
+Description=Arkime Viewer
+After=network.target opensearch.service elasticsearch.service
+
+[Service]
+Type=simple
+Restart=on-failure
+# StandardOutput=tty
+EnvironmentFile=-/opt/arkime/etc/viewer.env
+# Modify /opt/arkime/etc/viewer.env instead of ExecStart
+ExecStart=/bin/sh -c '/opt/arkime/bin/node viewer.js -c /opt/arkime/etc/config.ini ${OPTIONS} >> /opt/arkime/logs/viewer.log 2>&1'
+WorkingDirectory=/opt/arkime/viewer
+
+[Install]
+WantedBy=multi-user.target

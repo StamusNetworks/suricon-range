@@ -1,0 +1,22 @@
+---
+- debug:
+    msg: "Domain DNS servers are: {{ domain_dc_dns_servers | join(',') }}"
+
+- name: Set DNS servers to Domain Controllers
+  ansible.windows.win_dns_client:
+    adapter_names: "*"
+    dns_servers: "{{ domain_dc_dns_servers }}"
+
+- name: Join workstation to domain
+  microsoft.ad.membership:
+    dns_domain_name: "{{ domain_name }}"
+    domain_admin_user: "{{ ansible_user }}"
+    domain_admin_password: "{{ ansible_password }}"
+    state: domain
+  register: domain_join
+
+- name: Reboot if domain join requires it
+  ansible.windows.win_reboot:
+    msg: "Rebooting to complete domain join"
+    reboot_timeout: 1800
+  when: domain_join.reboot_required
