@@ -1,0 +1,86 @@
+// Suricon 2026 cyber range topology.
+// Source of truth: ansible/inventory/hosts.ini, ansible/site.yml, group_vars.
+// Render: dot -Tpng -Gdpi=150 assets/cyber-range-lab.dot -o assets/cyber-range-lab.png
+digraph lab {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=16, nodesep=0.35, ranksep=0.55,
+         newrank=true, compound=true, bgcolor="white", pad=0.2,
+         label=<<b>Suricon 2026 cyber range</b> — 10.137.2.0/24>, labelloc=t];
+  node  [fontname="Helvetica", fontsize=12, style="filled,rounded", shape=box, penwidth=1.4];
+  edge  [fontname="Helvetica", fontsize=10, penwidth=1.4];
+
+  // ---------------- Simulated network ----------------
+  subgraph cluster_simulated {
+    label=<<b>SIMULATED NETWORK</b> — exercise traffic>;
+    style="filled,rounded"; fillcolor="#fdecea"; color="#c0392b"; penwidth=2.5; fontcolor="#922b21";
+
+    subgraph cluster_adversary {
+      label=<<b>Adversary</b> — EXTERNAL_NET>;
+      style="filled,rounded"; fillcolor="#f5b7b1"; color="#922b21"; penwidth=1.5; fontcolor="#641e16";
+      tuoni [fillcolor="#ffffff", color="#922b21",
+             label=<<b>suricon-tuoni</b> · 10.137.2.7<br/><font point-size="10">Tuoni C2 0.17.1 · API :8443</font>>];
+    }
+
+    subgraph cluster_enterprise {
+      label=<<b>Victim enterprise</b> — lab.local AD<br/><font point-size="11">HOME_NET 10.137.2.32/27</font>>;
+      labelloc=b;
+      style="filled,rounded"; fillcolor="#fadbd8"; color="#c0392b"; penwidth=1.5; fontcolor="#922b21";
+      node [shape=component, fillcolor="#ffffff", color="#c0392b"];
+      ws1 [width=2.7, label=<<b>suricon-ws1</b><br/>10.137.2.33<br/><font point-size="10">Windows · domain member</font>>];
+      ws2 [width=2.7, label=<<b>suricon-ws2</b><br/>10.137.2.34<br/><font point-size="10">Windows · domain member</font>>];
+      dc  [label=<<b>suricon-dc</b> · 10.137.2.62<br/><font point-size="10">Domain controller · DNS · Kerberos<br/>LabUsers · LabAdmins (Domain Admins)</font>>];
+    }
+  }
+
+  // ---------------- Supporting monitoring ----------------
+  subgraph cluster_monitoring {
+    label=<<b>SUPPORTING MONITORING</b> — passive>;
+    labelloc=t;
+    style="filled,rounded"; fillcolor="#e8f1fb"; color="#1f618d"; penwidth=2.5; fontcolor="#1a5276";
+    node [fillcolor="#ffffff", color="#1f618d"];
+
+    probe [width=2.7, label=<
+      <table border="0" cellborder="0" cellspacing="1">
+        <tr><td><b>suricon-probe</b> · 10.137.2.5</td></tr>
+        <tr><td><font point-size="10">ens19 capture, no IP</font></td></tr>
+        <tr><td align="left"><font point-size="10">• Suricata 8.0.8 → EVE</font></td></tr>
+        <tr><td align="left"><font point-size="10">• Arkime 6.9.1 → PCAP</font></td></tr>
+        <tr><td align="left"><font point-size="10">• Elasticsearch 8.18</font></td></tr>
+        <tr><td align="left"><font point-size="10">• fluent-bit → EVE to logs</font></td></tr>
+      </table>>];
+
+    logs [width=2.7, label=<
+      <table border="0" cellborder="0" cellspacing="1">
+        <tr><td><b>suricon-logs</b> · 10.137.2.6</td></tr>
+        <tr><td align="left"><font point-size="10">• OpenSearch 3.8</font></td></tr>
+        <tr><td align="left"><font point-size="10">• Dashboards</font></td></tr>
+      </table>>];
+
+    { rank=same; probe; logs; }
+  }
+
+  // Exercise traffic (top to bottom)
+  tuoni -> ws1 [label=" beacon", color="#922b21", fontcolor="#922b21", dir=both];
+  tuoni -> ws2 [style=invis];
+  ws2 -> dc    [label="AD auth ", color="#c0392b", fontcolor="#c0392b"];
+  ws1 -> dc    [label=" lateral SMB/WMI", color="#c0392b", fontcolor="#c0392b", penwidth=2.2];
+
+  // Mirrored traffic into the probe
+  dc -> probe  [ltail=cluster_simulated, lhead=cluster_monitoring, style=dashed,
+                color="#7d3c98", penwidth=2.2, label=<<b> SPAN / mirror</b>>, fontcolor="#7d3c98"];
+
+  // Invisible anchors: keep monitoring box centred under the simulated box
+  ws1 -> probe [style=invis];
+  ws2 -> logs  [style=invis];
+  { rank=same; ws1 -> ws2 [style=invis]; }
+
+  // Telemetry pipeline
+  probe -> logs [ color="#1f618d", penwidth=2.6, fontcolor="#1f618d"];
+
+  // ---------------- Operator (below monitoring, keeps image narrow) ----------------
+  operator [shape=note, style="filled", fillcolor="#f2f3f4", color="#7f8c8d", fontcolor="#424949",
+            label=<<b>Operator / LLM Assistant</b><br/><font point-size="10">notebook · adsim · Ansible</font>>];
+  edge [style=dotted, color="#7f8c8d", fontcolor="#7f8c8d", dir=back];
+  probe -> operator [label=" pm_pcap (Arkime)"];
+  logs  -> operator [label=" pm_eve (OpenSearch)"];
+  tuoni -> operator [label=" Tuoni API", constraint=false];
+}
