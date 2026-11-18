@@ -1,8 +1,8 @@
 // Suricon 2026 cyber range topology.
 // Source of truth: ansible/inventory/hosts.ini, ansible/site.yml, group_vars.
-// Render: dot -Tpng -Gdpi=150 assets/cyber-range-lab.dot -o assets/cyber-range-lab.png
+// Render: dot -Tsvg assets/cyber-range-lab.dot -o assets/cyber-range-lab.svg
 digraph lab {
-  graph [rankdir=TB, fontname="Helvetica", fontsize=16, nodesep=0.35, ranksep=0.55,
+  graph [rankdir=TB, size="6.25,10", fontname="Helvetica", fontsize=16, nodesep=0.35, ranksep=0.55,
          newrank=true, compound=true, bgcolor="white", pad=0.2,
          label=<<b>Suricon 2026 cyber range</b> — 10.137.2.0/24>, labelloc=t];
   node  [fontname="Helvetica", fontsize=12, style="filled,rounded", shape=box, penwidth=1.4];
