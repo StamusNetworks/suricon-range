@@ -3,6 +3,8 @@
 .ipynb_checkpoints
 
 build/
+presentation.html
+presentation.pdf
 
 .env
 
